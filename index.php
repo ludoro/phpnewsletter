@@ -93,6 +93,23 @@
   </div>
 
   <div id="results" style="display:none">
+    <div class="card" id="title-card">
+      <h2>Email Title &amp; Subtitle</h2>
+      <p class="desc">Optimized subject line and preview text to boost open rates</p>
+      <div class="title-preview">
+        <div class="title-row">
+          <span class="title-label">Subject</span>
+          <span class="title-value" id="result-title"></span>
+          <button class="btn btn-outline btn-sm" onclick="copyText('result-title')">Copy</button>
+        </div>
+        <div class="title-row">
+          <span class="title-label">Preview</span>
+          <span class="title-value" id="result-subtitle"></span>
+          <button class="btn btn-outline btn-sm" onclick="copyText('result-subtitle')">Copy</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Generated Content</h2>
       <div class="tabs">
@@ -153,49 +170,53 @@ Article Structure:
 - Section 1: Explain the core concept. Break down the logic, architecture, or methodology. Use analogies if they clarify complex systems, but keep them technical.
 - Section 2: Discuss the "So what?" How does this affect production environments, performance, or workflow? (e.g., Is it faster? Cheaper? More accurate? Harder to deploy? Whatever you deem important).`;
 
-const PRE_PUBLISH_PROMPT = `Role: You are a Technical Lead. You are succinct and value-driven.
+const PRE_PUBLISH_PROMPT = `Using the newsletter content provided, write a pre-publish social media post that follows this exact structure and tone:
 
-Objective: Write a social media post teasing an upcoming newsletter article based on the Topic listed. IMPORTANT: The newsletter is about analyzing and commenting on others' work (papers, blog posts, technical articles), not about work you did.
+I'm reviewing a [system type] serving [scale metric].
 
-Constraints:
-- Do not summarize the whole article.
-- Focus on the "Why": Highlight a common pain point, a misconception, or a specific challenge that the article addresses.
-- Write like a human, not an AI. Be conversational and direct. No corporate speak or overly formal language.
-- Remember: You are commenting on external work, not describing your own work. Use language that reflects analyzing others' research or technical content.
-- Length: Under 280 characters if possible, or short-form text (LinkedIn style).
+[One-line hook that names the surprising failure mode without explaining it]
 
-Formatting Requirements:
-- DO NOT use markdown formatting. No asterisks for bold (**text**), no asterisks for bullet points (*).
-- Write plain text that can be copied directly into Substack or LinkedIn.
+The architecture looks reasonable on paper.
+→ [Normal-sounding setup detail]
+→ [Another normal-sounding detail]
 
-Structure:
-- The Hook: A direct statement about the problem or the topic.
-- The Promise: "Something like: In the next newsletter, I break down exactly how [Concept] handles this..."
-- Call to Action: "Subscribe to not miss it, link to the article below".`;
+But there's a [specific flaw] that compounds under [specific condition].
+The numbers are not pretty.
 
-const PUBLISH_PROMPT = `Role: You are an expert sharing knowledge with peers.
+Full breakdown dropping this week in ML@Scale:
+[Link]
 
-Objective: Create a launch post for the newsletter article based on the Content below. IMPORTANT: The newsletter analyzes and comments on others' work (papers, blog posts, technical articles). You are sharing insights from analyzing external work, not describing your own work.
+---
+Have you seen this pattern in production?
 
-Strategy: The goal is to provide value in the post itself (Zero-Click content) which convinces them the full article is high-quality.
+Rules:
+- Fill in the bracketed placeholders using specifics from the newsletter content.
+- Keep [Link] as a literal placeholder — do not invent a URL.
+- Do not add any other text, intro, or explanation outside this structure.
+- No markdown formatting. Plain text only.`;
 
-Guidelines:
-- Extract the Insight: Find the most interesting fact, architectural decision, or result from the content you analyzed.
-- No Clickbait: Do not use "You won't believe what happened." Be specific.
-- Write like a human engineer sharing insights from analyzing others' work. Be conversational, direct, and authentic. Avoid AI-sounding phrases.
-- NEVER use "we did this" or "we built this" - always frame it as analysis of external work. Use "they found", "the paper shows", "this approach", etc.
-- Tone: Helpful, technical, authoritative but approachable.
+const PUBLISH_PROMPT = `Using the newsletter content provided, write a publish-day social media post that follows this exact structure and tone:
 
-Formatting Requirements:
-- DO NOT use markdown formatting. No asterisks for bold (**text**), no asterisks for bullet points (*).
-- Write plain text that can be copied directly into Substack or LinkedIn.
-- Use line breaks for separation, not markdown bullets.
+I reviewed a [system type] serving [scale metric].
 
-Structure:
-- Headline: A strong technical statement or question regarding the topic.
-- The "Meat": 2-3 quick, high-impact takeaways from the article. (e.g., "Found that X approach reduced latency by 20%")
-- The Cliffhanger: Mention one deeper nuance that is only covered in the full text.
-- Call to Action: "Read the full deep dive in the newsletter, link below".`;
+It had [X visible symptoms]. Nobody connected them.
+
+The real problem was [root cause 1] plus [root cause 2] interacting in a way the team didn't model.
+
+→ [Specific bad outcome with number]
+→ [Second bad outcome with number]
+→ [Third that shows the scope]
+
+The fix isn't obvious. It required rethinking [core assumption].
+
+Full architecture teardown in this week's ML@Scale:
+[Link]
+
+Rules:
+- Fill in the bracketed placeholders using specifics from the newsletter content.
+- Keep [Link] as a literal placeholder — do not invent a URL.
+- Do not add any other text, intro, or explanation outside this structure.
+- No markdown formatting. Plain text only.`;
 
 let sourceType = 'url';
 
@@ -258,6 +279,8 @@ async function generate() {
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Failed to generate content');
 
+    document.getElementById('result-title').textContent = data.title || '';
+    document.getElementById('result-subtitle').textContent = data.subtitle || '';
     document.getElementById('result-newsletter').textContent = data.newsletter;
     document.getElementById('result-pre-publish').textContent = data.prePublishPost;
     document.getElementById('result-publish').textContent = data.publishPost;

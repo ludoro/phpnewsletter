@@ -78,6 +78,16 @@ $model = 'gemini-3-pro-preview';
 $isPdf = ($sourceType === 'pdf');
 $isText = ($sourceType === 'text');
 
+$titlePrompt = "You are an expert email marketer. Based on the newsletter article below, generate a compelling email subject line (title) and preview text (subtitle) optimized to maximize open rates.\n\nRules:\n- Title: max 60 characters, specific, creates curiosity or urgency, no clickbait, no ALL CAPS\n- Subtitle: max 100 characters, adds context or a second hook that complements the title\n- No markdown formatting\n- Output exactly two lines in this format:\nTITLE: <title here>\nSUBTITLE: <subtitle here>";
+
+function parse_title_subtitle(string $text): array {
+    $title = '';
+    $subtitle = '';
+    if (preg_match('/^TITLE:\s*(.+)$/mi', $text, $m)) $title = trim($m[1]);
+    if (preg_match('/^SUBTITLE:\s*(.+)$/mi', $text, $m)) $subtitle = trim($m[1]);
+    return ['title' => $title, 'subtitle' => $subtitle];
+}
+
 // --- PDF path ---
 if ($isPdf) {
     $newsletterResult = gemini_call($apiKey, $model, [[
@@ -94,11 +104,14 @@ if ($isPdf) {
     $newsletter = $newsletterResult['text'];
     $summary = substr($newsletter, 0, 2000);
 
-    $preResult  = gemini_call($apiKey, $model, [[
+    $preResult   = gemini_call($apiKey, $model, [[
         'parts' => [['text' => $prePublishPrompt . "\n\nNewsletter Content Summary:\n" . $summary]]
     ]]);
-    $pubResult  = gemini_call($apiKey, $model, [[
+    $pubResult   = gemini_call($apiKey, $model, [[
         'parts' => [['text' => $publishPrompt . "\n\nNewsletter Content:\n" . $summary]]
+    ]]);
+    $titleResult = gemini_call($apiKey, $model, [[
+        'parts' => [['text' => $titlePrompt . "\n\nNewsletter Article:\n" . $summary]]
     ]]);
 
     if (isset($preResult['error']) || isset($pubResult['error'])) {
@@ -106,7 +119,10 @@ if ($isPdf) {
         echo json_encode(['error' => $preResult['error'] ?? $pubResult['error']]);
         exit;
     }
+    $ts = isset($titleResult['text']) ? parse_title_subtitle($titleResult['text']) : ['title' => '', 'subtitle' => ''];
     echo json_encode([
+        'title'           => $ts['title'],
+        'subtitle'        => $ts['subtitle'],
         'newsletter'      => $newsletter,
         'prePublishPost'  => $preResult['text'],
         'publishPost'     => $pubResult['text'],
@@ -151,11 +167,14 @@ if (isset($newsletterResult['error'])) {
 $newsletter = $newsletterResult['text'];
 $summary = substr($newsletter, 0, 2000);
 
-$preResult = gemini_call($apiKey, $model, [[
+$preResult   = gemini_call($apiKey, $model, [[
     'parts' => [['text' => $prePublishPrompt . "\n\nNewsletter Content Summary:\n" . $summary]]
 ]]);
-$pubResult = gemini_call($apiKey, $model, [[
+$pubResult   = gemini_call($apiKey, $model, [[
     'parts' => [['text' => $publishPrompt . "\n\nNewsletter Content:\n" . $summary]]
+]]);
+$titleResult = gemini_call($apiKey, $model, [[
+    'parts' => [['text' => $titlePrompt . "\n\nNewsletter Article:\n" . $summary]]
 ]]);
 
 if (isset($preResult['error']) || isset($pubResult['error'])) {
@@ -163,8 +182,11 @@ if (isset($preResult['error']) || isset($pubResult['error'])) {
     echo json_encode(['error' => $preResult['error'] ?? $pubResult['error']]);
     exit;
 }
+$ts = isset($titleResult['text']) ? parse_title_subtitle($titleResult['text']) : ['title' => '', 'subtitle' => ''];
 
 echo json_encode([
+    'title'           => $ts['title'],
+    'subtitle'        => $ts['subtitle'],
     'newsletter'      => $newsletter,
     'prePublishPost'  => $preResult['text'],
     'publishPost'     => $pubResult['text'],
