@@ -148,13 +148,13 @@ Critical Issue #1: [Problem Title]
 Critical Issue #2: [Problem Title]
 [Reference specific timeline or metric]
 
-Design Smell #3: [Problem Title]
+Critical Issue #3: [Problem Title]
 [Walk through a typical flow]
 
 Critical Issue #4: [Problem Title]
 [Quote something suspicious from their setup]
 
-Hidden Issue #5: [Problem Title]
+Critical Issue #5: [Problem Title]
 They have [surprising number] just for [seemingly simple task].
 
 ---
@@ -175,6 +175,24 @@ Impact: [Metric before] → [Metric after]
 Replace: [Old approach] ([$ cost])
 With: [New approach]
 Total: [$ new total]
+
+---
+
+The Trade-offs
+
+Every decision has a downside. Here's what you need to know before acting on any of this:
+
+Solution 1: [Solution 1 Title]
+[List only the cons that genuinely matter — could be one, could be several]
+[When this is the wrong call: only include if there is a real scenario worth flagging]
+
+Solution 2: [Solution 2 Title]
+[List only the cons that genuinely matter]
+[When this is the wrong call: only include if relevant]
+
+Solution 3: [Solution 3 Title]
+[List only the cons that genuinely matter]
+[When this is the wrong call: only include if relevant]
 
 ---
 
@@ -203,6 +221,34 @@ They just need to listen to what the system is saying.
 ---
 
 [Engagement question related to the trade-offs discussed]
+
+---
+
+APPENDIX: Cost Estimation Methodology
+
+How I estimated the savings for each decision:
+
+Solution 1: [Solution 1 Title]
+Baseline: [Current cost/unit] × [current volume/month] = [$ current monthly cost]
+After change: [New cost/unit] × [same or adjusted volume] = [$ new monthly cost]
+Estimated saving: [$ difference/month] ([% reduction])
+Key assumption: [The main assumption driving this estimate, e.g. cache hit rate, traffic pattern, model compression ratio]
+Confidence: [High/Medium/Low] — [one sentence explaining uncertainty, e.g. "actual hit rate depends on query diversity"]
+
+Solution 2: [Solution 2 Title]
+Baseline: [Current cost breakdown, e.g. infra + ops labor]
+After change: [New cost breakdown]
+Estimated saving: [$ difference/month]
+Key assumption: [Main assumption]
+Confidence: [High/Medium/Low] — [one sentence]
+
+Solution 3: [Solution 3 Title]
+Baseline: [Current cost]
+After change: [New cost]
+Estimated saving: [$ difference/month]
+Key assumption: [Main assumption]
+Confidence: [High/Medium/Low] — [one sentence]
+
 TMPL;
 
 $reviewPrompt = <<<PROMPT
@@ -227,6 +273,9 @@ Instructions:
 8. Write plain text. Use line breaks for sections.
 9. Keep the tone direct, technical, and analytical but conversational
 10. Include specific latencies, costs, scale numbers throughout
+11. For the APPENDIX: Cost Estimation Methodology — show the actual arithmetic: unit cost × volume = total. Numbers must be internally consistent with the costs stated in the main article. State the key assumption and your confidence level honestly.
+12. For the Trade-offs section in the main text — be genuinely critical. List only the downsides that actually matter for each solution — not every solution needs the same number of cons. Include a "When this is the wrong call" scenario only when there is a genuinely meaningful one. Do not soften or hedge, but do not pad with weak cons just to fill a list.
+13. All issues in The Analysis section must be labeled "Critical Issue #N" — never use "Design Smell" or "Hidden Issue".
 
 Generate the complete system review article now:
 PROMPT;
