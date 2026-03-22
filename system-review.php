@@ -158,109 +158,50 @@
 </main>
 
 <script>
-const PRE_PUBLISH_PROMPT = `Role: You are a Technical Lead creating a LinkedIn post to tease an upcoming system review article. IMPORTANT: The system review analyzes and comments on others' work (papers, blog posts, technical articles about systems). You are an engineer providing analysis of external work, not describing your own work.
+const PRE_PUBLISH_PROMPT = `Using the newsletter content provided, write a pre-publish social media post that follows this exact structure and tone:
 
-Based on the system review article below, create a short LinkedIn teaser post following this structure:
+I'm reviewing a [system type] serving [scale metric].
 
-LinkedIn Post:
+[One-line hook that names the surprising failure mode without explaining it]
 
-I'm reviewing a [system type] serving [scale metric] ([fictional case study, real architecture problems]).
+The architecture looks reasonable on paper.
+→ [Normal-sounding setup detail]
+→ [Another normal-sounding detail]
 
-The setup:
-→ [Problem indicator 1]
-→ [Problem indicator 2]
+But there's a [specific flaw] that compounds under [specific condition].
+The numbers are not pretty.
 
-The problems I found:
-→ [Root cause 1]: [specific numbers]
-→ [Root cause 2]: [specific numbers]
+Full breakdown dropping this week in ML@Scale:
+[Link]
 
-The fix:
-→ [Solution 1] to [benefit]
-→ [Solution 2] ([before] → [after])
+Rules:
+- Fill in the bracketed placeholders using specifics from the newsletter content.
+- Keep [Link] as a literal placeholder — do not invent a URL.
+- Do not add any other text, intro, or explanation outside this structure.
+- No markdown formatting. Plain text only.`;
 
-Full architecture breakdown coming in this week's ML@Scale:
-[Link to newsletter]
+const PUBLISH_PROMPT = `Using the newsletter content provided, write a publish-day social media post that follows this exact structure and tone:
 
----
+I reviewed a [system type] serving [scale metric].
 
-[Engagement question]
+It had [X visible symptoms]. Nobody connected them.
 
----
+The real problem was [root cause 1] plus [root cause 2] interacting in a way the team didn't model.
 
-P.S. Subscribe to not miss it.
+→ [Specific bad outcome with number]
+→ [Second bad outcome with number]
+→ [Third that shows the scope]
 
-System Review Article:
-[The full system review article will be provided here]
+The fix isn't obvious. It required rethinking [core assumption].
 
-Instructions:
-1. Extract the key system type, scale, and problems from the review
-2. Highlight 2-3 specific root causes with numbers
-3. Summarize 2 key solutions and their impact
-4. Keep it under 200 words
-5. End with an engagement question
-6. Use the arrow (→) format exactly as shown
-7. Write like a human engineer, not an AI.
-8. NEVER use "we did this" or "we built this" - frame it as analysis of external work.
-9. DO NOT use markdown formatting.
-10. Write plain text that can be copied directly into Substack or LinkedIn.`;
+Full architecture teardown in this week's ML@Scale:
+[Link]
 
-const PUBLISH_PROMPT = `Role: You are a Technical Lead creating a LinkedIn post to promote a system review article. IMPORTANT: The system review analyzes and comments on others' work (papers, blog posts, technical articles about systems). You are an engineer providing analysis of external work, not describing your own work.
-
-Based on the system review article below, create a LinkedIn marketing post following this EXACT template:
-
-LinkedIn Post:
-
-I reviewed a [system type] serving [scale metric] ([fictional case study, real architecture problems]).
-
-The setup:
-→ [Problem indicator 1]
-→ [Problem indicator 2]
-→ [Problem indicator 3]
-
-The symptoms:
-→ [Incident 1]: [impact]
-→ [Incident 2]: [recovery action]
-→ [User experience issue]: [metric]
-
-The problems:
-→ [Root cause 1]: [specific numbers]
-→ [Root cause 2]: [specific numbers]
-→ [Root cause 3]: [specific numbers]
-→ [Root cause 4]: [specific numbers]
-
-The fix:
-→ [Solution 1] to [benefit]
-→ [Solution 2] ([before] → [after])
-→ [Solution 3] ([old metric] → [new metric])
-→ [Solution 4] ([frequency/approach change])
-
-Impact: [X better metric], [Y% cost savings], scales to [Z metric].
-
-Full architecture breakdown in this week's ML@Scale:
-[Link to newsletter]
-
----
-
-[Engagement question]
-
----
-
-P.S. Next review: [Teaser for next one].
-
-System Review Article:
-[The full system review article will be provided here]
-
-Instructions:
-1. Extract the key system type, scale, and problems from the review
-2. Highlight 3-4 specific root causes with numbers
-3. Summarize the solutions and their impact
-4. Keep it under 300 words
-5. End with an engagement question
-6. Use the arrow (→) format exactly as shown
-7. Write like a human engineer, not an AI.
-8. NEVER use "we did this" or "we built this".
-9. DO NOT use markdown formatting.
-10. Write plain text.`;
+Rules:
+- Fill in the bracketed placeholders using specifics from the newsletter content.
+- Keep [Link] as a literal placeholder — do not invent a URL.
+- Do not add any other text, intro, or explanation outside this structure.
+- No markdown formatting. Plain text only.`;
 
 document.getElementById('pre-publish-prompt').value = PRE_PUBLISH_PROMPT;
 document.getElementById('publish-prompt').value = PUBLISH_PROMPT;
