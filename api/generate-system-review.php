@@ -201,20 +201,6 @@ Time to implement: [timeline], [team size]
 
 ---
 
-The Lesson
-
-The system already told them what's wrong:
-[Incident 1] → [interpretation]
-[Weird metric] → [interpretation]
-
-They just need to listen to what the system is saying.
-
----
-
-[Engagement question related to the trade-offs discussed]
-
----
-
 APPENDIX: Cost Estimation Methodology
 
 How I estimated the savings for each decision:
@@ -260,7 +246,7 @@ Instructions:
 4. Provide concrete solutions with before/after metrics
 5. Make the company and scenario fictional but the technical problems REAL
 6. Write like a human engineer, not an AI. Be direct, conversational, and authentic.
-7. Use markdown headers only: # for top-level section titles (e.g. "# The System", "# The Analysis"), ## for subsection titles (e.g. "## Architecture Overview", "## Critical Issue #1"). Do NOT use any other markdown: no asterisks, no bold, no bullet dashes, no code fences.
+7. Do NOT use any markdown anywhere in the article — no #, no ##, no asterisks, no bold, no bullet dashes, no code fences. Section titles and subsection titles must be plain text on their own line.
 8. Write plain text for all body content. Use line breaks for spacing between paragraphs.
 9. Keep the tone direct, technical, and analytical but conversational
 10. Include specific latencies, costs, scale numbers throughout
