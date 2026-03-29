@@ -165,32 +165,23 @@ WHAT I'D DO INSTEAD
 Impact:
 [Improvement 1 with metric]
 [Improvement 2 with metric]
+Trade-offs:
+[List only the cons that genuinely matter — could be one, could be several]
+[When this is the wrong call: only include if there is a real scenario worth flagging]
 
 2. [Solution 2 Title]
 Current: [Old flow]
 New: [New flow]
 Impact: [Metric before] → [Metric after]
+Trade-offs:
+[List only the cons that genuinely matter]
+[When this is the wrong call: only include if relevant]
 
 3. [Solution 3 Title]
 Replace: [Old approach] ([$ cost])
 With: [New approach]
 Total: [$ new total]
-
----
-
-The Trade-offs
-
-Every decision has a downside. Here's what you need to know before acting on any of this:
-
-Solution 1: [Solution 1 Title]
-[List only the cons that genuinely matter — could be one, could be several]
-[When this is the wrong call: only include if there is a real scenario worth flagging]
-
-Solution 2: [Solution 2 Title]
-[List only the cons that genuinely matter]
-[When this is the wrong call: only include if relevant]
-
-Solution 3: [Solution 3 Title]
+Trade-offs:
 [List only the cons that genuinely matter]
 [When this is the wrong call: only include if relevant]
 
@@ -269,14 +260,15 @@ Instructions:
 4. Provide concrete solutions with before/after metrics
 5. Make the company and scenario fictional but the technical problems REAL
 6. Write like a human engineer, not an AI. Be direct, conversational, and authentic.
-7. DO NOT use markdown formatting. No asterisks, no markdown headers (#).
-8. Write plain text. Use line breaks for sections.
+7. Use markdown headers only: # for top-level section titles (e.g. "# The System", "# The Analysis"), ## for subsection titles (e.g. "## Architecture Overview", "## Critical Issue #1"). Do NOT use any other markdown: no asterisks, no bold, no bullet dashes, no code fences.
+8. Write plain text for all body content. Use line breaks for spacing between paragraphs.
 9. Keep the tone direct, technical, and analytical but conversational
 10. Include specific latencies, costs, scale numbers throughout
 11. For the APPENDIX: Cost Estimation Methodology — show the actual arithmetic: unit cost × volume = total. Numbers must be internally consistent with the costs stated in the main article. State the key assumption and your confidence level honestly.
-12. For the Trade-offs section in the main text — be genuinely critical. List only the downsides that actually matter for each solution — not every solution needs the same number of cons. Include a "When this is the wrong call" scenario only when there is a genuinely meaningful one. Do not soften or hedge, but do not pad with weak cons just to fill a list.
+12. Trade-offs belong inside each solution in the "WHAT I'D DO INSTEAD" section, not in a separate section. Each solution ends with its own Trade-offs block. Be genuinely critical — list only the downsides that actually matter. Include a "When this is the wrong call" scenario only when there is a genuinely meaningful one. Do not soften or hedge, but do not pad with weak cons just to fill a list.
 13. All issues in The Analysis section must be labeled "Critical Issue #N" — never use "Design Smell" or "Hidden Issue".
-14. CRITICAL REQUIREMENT — The core architectural issue must be planted and discoverable in the Architecture Overview section. A careful reader going through that section should be able to spot something that doesn't add up — a latency number that's inconsistent with the stated throughput, a dependency chain that introduces a hidden bottleneck, a cost figure that implies an unsustainable per-request overhead, or a flow step that silently makes the whole system brittle. The detail should be subtle enough that a skimming reader misses it, but clear enough that an engineer who traces through the numbers or the call path can identify it. When The Analysis section references this issue, it must explicitly point back to the specific line or metric in the Architecture Overview that revealed it.
+14. CRITICAL REQUIREMENT — Every single critical issue must be fully visible and traceable in the Architecture Overview section BEFORE The Analysis section names it. This is not about hiding clues — it is about laying out the facts plainly so that a technically engaged reader, working through the numbers and the architecture description, has everything they need to arrive at the diagnosis themselves. When The Analysis section names an issue, the reader's reaction must be "Yes, I saw that — that number didn't add up" or "Right, that dependency chain was obviously going to cause this", NOT "Oh, I never would have guessed that". The Architecture Overview must contain: the exact latency/cost/throughput figures that expose each bottleneck, the exact dependency or design decision that creates each failure mode, and enough detail that a reader tracing through the system flow can connect the dots independently. The Analysis section then confirms and articulates what the architecture already made obvious — it is the "Aha, exactly that" moment, not a reveal.
+15. Never introduce a critical issue in The Analysis section that relies on information not present in the Architecture Overview. Every issue must be fully grounded in facts already stated.
 
 Generate the complete system review article now:
 PROMPT;
@@ -289,4 +281,53 @@ if (isset($result['error'])) {
     exit;
 }
 
-echo json_encode(['reviewArticle' => $result['text']]);
+$article = $result['text'];
+
+$titlePrompt = <<<PROMPT
+You are a growth-obsessed technical newsletter editor for ML@Scale, a newsletter read by senior engineers and ML practitioners. Your titles routinely get 40%+ open rates because they are impossible to ignore.
+
+Based on the system review article below, generate a newsletter title and subtitle that make engineers stop scrolling.
+
+Title rules:
+- Lead with a shocking number, cost, or metric pulled directly from the article (e.g. "$240K/month", "47ms", "3x slower", "14 engineers")
+- Name the specific failure — not "an issue" but the actual thing that broke
+- Create tension or contradiction ("looked fine", "nobody noticed", "passed all tests")
+- Max 12 words. No markdown. No colons.
+- Examples of the energy to aim for:
+  "A $180K/Month Fraud Model That Was Silently Wrong for 6 Months"
+  "How a 3-Line Config Change Took Down Real-Time Inference for 40M Users"
+  "The Embedding Pipeline That Looked Fast Until It Hit 10K QPS"
+
+Subtitle rules:
+- One sentence. Expand on what makes the story technically juicy.
+- Include a second concrete number or detail from the article if possible.
+- End with what the reader will learn or walk away with — make it feel worth 5 minutes of their time.
+- No markdown.
+
+Generate TWO different title/subtitle variations — each should take a distinct angle (e.g. one leads with the cost failure, another leads with the architectural mistake or the timeline).
+
+Output ONLY valid JSON in this exact format with no other text: {"title1": "...", "subtitle1": "...", "title2": "...", "subtitle2": "..."}
+
+System Review Article:
+{$article}
+PROMPT;
+
+$titleResult = gemini_call($apiKey, $fastModel, $titlePrompt);
+
+$title1    = '';
+$subtitle1 = '';
+$title2    = '';
+$subtitle2 = '';
+if (!isset($titleResult['error'])) {
+    $raw = trim($titleResult['text']);
+    // strip markdown code fences if present
+    $raw = preg_replace('/^```(?:json)?\s*/i', '', $raw);
+    $raw = preg_replace('/\s*```$/', '', $raw);
+    $parsed = json_decode($raw, true);
+    if (isset($parsed['title1']))    $title1    = $parsed['title1'];
+    if (isset($parsed['subtitle1'])) $subtitle1 = $parsed['subtitle1'];
+    if (isset($parsed['title2']))    $title2    = $parsed['title2'];
+    if (isset($parsed['subtitle2'])) $subtitle2 = $parsed['subtitle2'];
+}
+
+echo json_encode(['reviewArticle' => $article, 'title1' => $title1, 'subtitle1' => $subtitle1, 'title2' => $title2, 'subtitle2' => $subtitle2]);

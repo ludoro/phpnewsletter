@@ -96,6 +96,31 @@
       <h2>Newsletter Article</h2>
       <p class="desc">Edit your newsletter article, then generate marketing posts</p>
 
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#a78bfa;margin-bottom:10px">Variation A</div>
+          <div class="field">
+            <label>Title A</label>
+            <input type="text" id="review-title1" class="mono" />
+          </div>
+          <div class="field">
+            <label>Subtitle A</label>
+            <input type="text" id="review-subtitle1" class="mono" />
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#a78bfa;margin-bottom:10px">Variation B</div>
+          <div class="field">
+            <label>Title B</label>
+            <input type="text" id="review-title2" class="mono" />
+          </div>
+          <div class="field">
+            <label>Subtitle B</label>
+            <input type="text" id="review-subtitle2" class="mono" />
+          </div>
+        </div>
+      </div>
+
       <div class="field">
         <label>Newsletter Content</label>
         <textarea id="review-article" rows="20" class="mono"></textarea>
@@ -236,7 +261,11 @@ async function generateNewsletter() {
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Failed to generate');
 
-    document.getElementById('review-article').value = data.reviewArticle;
+    document.getElementById('review-title1').value    = data.title1    || '';
+    document.getElementById('review-subtitle1').value = data.subtitle1 || '';
+    document.getElementById('review-title2').value    = data.title2    || '';
+    document.getElementById('review-subtitle2').value = data.subtitle2 || '';
+    document.getElementById('review-article').value  = data.reviewArticle;
     document.getElementById('newsletter-section').style.display = 'block';
     document.getElementById('newsletter-section').scrollIntoView({behavior: 'smooth'});
   } catch(e) {
