@@ -41,11 +41,11 @@ function gemini_call(string $apiKey, string $model, string $prompt): array {
 $fastModel    = 'gemini-3-flash-preview';
 $detailModel  = 'gemini-3-pro-preview';
 
-// --- Mode 1: generate marketing posts from existing review article ---
+// --- Mode 1: generate marketing post from existing review article ---
 if ($reviewArticle) {
-    if (!$prePublishPrompt || !$publishPrompt) {
+    if (!$publishPrompt) {
         http_response_code(400);
-        echo json_encode(['error' => 'Missing prePublishPrompt or publishPrompt']);
+        echo json_encode(['error' => 'Missing publishPrompt']);
         exit;
     }
 
@@ -53,32 +53,19 @@ if ($reviewArticle) {
         ? substr($reviewArticle, 0, 3000) . "\n\n[... article continues ...]"
         : $reviewArticle;
 
-    $prePrompt = str_contains($prePublishPrompt, '[The full system review article will be provided here]')
-        ? str_replace('[The full system review article will be provided here]', $summary, $prePublishPrompt)
-        : $prePublishPrompt . "\n\nSystem Review Article:\n" . $summary;
-
     $pubPrompt = str_contains($publishPrompt, '[The full system review article will be provided here]')
         ? str_replace('[The full system review article will be provided here]', $summary, $publishPrompt)
         : $publishPrompt . "\n\nSystem Review Article:\n" . $summary;
 
-    $preResult = gemini_call($apiKey, $fastModel, $prePrompt);
     $pubResult = gemini_call($apiKey, $fastModel, $pubPrompt);
 
-    if (isset($preResult['error'])) {
-        http_response_code(500);
-        echo json_encode(['error' => $preResult['error']]);
-        exit;
-    }
     if (isset($pubResult['error'])) {
         http_response_code(500);
         echo json_encode(['error' => $pubResult['error']]);
         exit;
     }
 
-    echo json_encode([
-        'prePublishPost' => $preResult['text'],
-        'marketingPost'  => $pubResult['text'],
-    ]);
+    echo json_encode(['marketingPost' => $pubResult['text']]);
     exit;
 }
 
@@ -142,6 +129,9 @@ The Analysis
 Now let me show you what's actually happening here.
 
 Critical Issue #1: [Problem Title]
+
+I write about ML systems in production — the tradeoffs, the architecture decisions, the stuff that doesn't make it into papers. If you want to go deeper, the paid tier covers the technical details I can't fit in free posts.
+
 [Point to specific detail from architecture section]
 [Calculate the impact with numbers]
 

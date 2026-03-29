@@ -54,16 +54,6 @@
     <div class="field">
       <div class="prompt-header">
         <div>
-          <div class="prompt-title">Pre-Publish Marketing Post</div>
-          <div class="prompt-sub">Announce the upcoming system review</div>
-        </div>
-      </div>
-      <textarea id="pre-publish-prompt" rows="8" class="mono"></textarea>
-    </div>
-
-    <div class="field">
-      <div class="prompt-header">
-        <div>
           <div class="prompt-title">Publish Day Marketing Post</div>
           <div class="prompt-sub">Promote the published system review</div>
         </div>
@@ -84,7 +74,7 @@
       <li>Critical issues analysis with specific metrics</li>
       <li>Proposed solutions with before/after comparisons</li>
       <li>Impact assessment and implementation timeline</li>
-      <li>Pre-publish and publish day marketing posts</li>
+      <li>Publish day marketing post</li>
     </ul>
   </div>
 
@@ -127,84 +117,29 @@
       </div>
 
       <div class="flex-between">
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="copyText('review-article-text')">Copy</button>
-          <button class="btn btn-outline btn-sm" id="gen-image-btn" onclick="generateImage()">
-            🖼 Generate Infographic
-          </button>
-        </div>
+        <button class="btn btn-outline btn-sm" onclick="copyText('review-article-text')">Copy</button>
         <button class="btn btn-primary btn-lg" id="gen-posts-btn" onclick="generatePosts()">
-          ✦ Generate Marketing Posts
+          ✦ Generate Marketing Post
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Generated Image -->
-  <div id="image-section" style="display:none">
-    <div class="card">
-      <h2>Before/After Infographic</h2>
-      <p class="desc">Generated infographic showing the system design review before and after</p>
-      <div style="background:#111; border-radius:8px; padding:16px; display:flex; justify-content:center; margin-bottom:12px">
-        <img id="infographic-img" class="infographic" alt="System Design Review Before/After" />
-      </div>
-      <div class="flex-end">
-        <button class="btn btn-outline btn-sm" onclick="downloadImage()">Download</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Marketing Posts -->
+  <!-- Marketing Post -->
   <div id="posts-section" style="display:none">
     <div class="card">
-      <h2>Generated Marketing Posts</h2>
-      <p class="desc">Your pre-publish and publish day marketing posts</p>
-      <div class="tabs">
-        <div class="tab-buttons">
-          <button class="tab-btn active" onclick="switchTab('pre')">Pre-Publish Post</button>
-          <button class="tab-btn" onclick="switchTab('pub')">Publish Post</button>
-        </div>
-        <div id="tab-pre" class="tab-content active">
-          <div class="flex-end" style="margin-bottom:8px">
-            <button class="btn btn-outline btn-sm" onclick="copyResult('result-pre')">Copy</button>
-          </div>
-          <div class="result-box" id="result-pre"></div>
-        </div>
-        <div id="tab-pub" class="tab-content">
-          <div class="flex-end" style="margin-bottom:8px">
-            <button class="btn btn-outline btn-sm" onclick="copyResult('result-pub')">Copy</button>
-          </div>
-          <div class="result-box" id="result-pub"></div>
-        </div>
+      <h2>Generated Marketing Post</h2>
+      <p class="desc">Your publish day marketing post</p>
+      <div class="flex-end" style="margin-bottom:8px">
+        <button class="btn btn-outline btn-sm" onclick="copyResult('result-pub')">Copy</button>
       </div>
+      <div class="result-box" id="result-pub"></div>
     </div>
   </div>
 
 </main>
 
 <script>
-const PRE_PUBLISH_PROMPT = `Using the newsletter content provided, write a pre-publish social media post that follows this exact structure and tone:
-
-I'm reviewing a [system type] serving [scale metric].
-
-[One-line hook that names the surprising failure mode without explaining it]
-
-The architecture looks reasonable on paper.
-→ [Normal-sounding setup detail]
-→ [Another normal-sounding detail]
-
-But there's a [specific flaw] that compounds under [specific condition].
-The numbers are not pretty.
-
-Full breakdown dropping this week in ML@Scale:
-[Link]
-
-Rules:
-- Fill in the bracketed placeholders using specifics from the newsletter content.
-- Keep [Link] as a literal placeholder — do not invent a URL.
-- Do not add any other text, intro, or explanation outside this structure.
-- No markdown formatting. Plain text only.`;
-
 const PUBLISH_PROMPT = `Using the newsletter content provided, write a publish-day social media post that follows this exact structure and tone:
 
 I reviewed a [system type] serving [scale metric].
@@ -228,7 +163,6 @@ Rules:
 - Do not add any other text, intro, or explanation outside this structure.
 - No markdown formatting. Plain text only.`;
 
-document.getElementById('pre-publish-prompt').value = PRE_PUBLISH_PROMPT;
 document.getElementById('publish-prompt').value = PUBLISH_PROMPT;
 
 const savedKey = localStorage.getItem('gemini-api-key');
@@ -236,8 +170,6 @@ if (savedKey) document.getElementById('api-key').value = savedKey;
 document.getElementById('api-key').addEventListener('input', function() {
   localStorage.setItem('gemini-api-key', this.value);
 });
-
-let currentImageData = null;
 
 async function generateNewsletter() {
   const industryContext = document.getElementById('industry-context').value.trim();
@@ -250,7 +182,6 @@ async function generateNewsletter() {
   document.getElementById('error-area').innerHTML = '';
   document.getElementById('newsletter-section').style.display = 'none';
   document.getElementById('posts-section').style.display = 'none';
-  document.getElementById('image-section').style.display = 'none';
 
   try {
     const resp = await fetch('api/generate-system-review.php', {
@@ -283,7 +214,7 @@ async function generatePosts() {
 
   const btn = document.getElementById('gen-posts-btn');
   btn.disabled = true;
-  btn.textContent = '⟳ Generating Posts...';
+  btn.textContent = '⟳ Generating Post...';
   document.getElementById('posts-section').style.display = 'none';
 
   try {
@@ -293,14 +224,12 @@ async function generatePosts() {
       body: JSON.stringify({
         reviewArticle,
         apiKey,
-        prePublishPrompt: document.getElementById('pre-publish-prompt').value,
         publishPrompt: document.getElementById('publish-prompt').value,
       })
     });
     const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Failed to generate posts');
+    if (!resp.ok) throw new Error(data.error || 'Failed to generate post');
 
-    document.getElementById('result-pre').textContent = data.prePublishPost;
     document.getElementById('result-pub').textContent = data.marketingPost;
     document.getElementById('posts-section').style.display = 'block';
     document.getElementById('posts-section').scrollIntoView({behavior: 'smooth'});
@@ -308,56 +237,8 @@ async function generatePosts() {
     document.getElementById('error-area').innerHTML = '<div class="error-box">' + escHtml(e.message) + '</div>';
   } finally {
     btn.disabled = false;
-    btn.textContent = '✦ Generate Marketing Posts';
+    btn.textContent = '✦ Generate Marketing Post';
   }
-}
-
-async function generateImage() {
-  const reviewArticle = document.getElementById('review-article').value.trim();
-  const apiKey = document.getElementById('api-key').value.trim();
-  if (!reviewArticle || !apiKey) return;
-
-  const btn = document.getElementById('gen-image-btn');
-  btn.disabled = true;
-  btn.textContent = '⟳ Generating...';
-  document.getElementById('image-section').style.display = 'none';
-
-  try {
-    const resp = await fetch('api/generate-image.php', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ reviewArticle, apiKey })
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Failed to generate image');
-
-    currentImageData = data.image;
-    document.getElementById('infographic-img').src = 'data:image/png;base64,' + data.image;
-    document.getElementById('image-section').style.display = 'block';
-    document.getElementById('image-section').scrollIntoView({behavior: 'smooth'});
-  } catch(e) {
-    document.getElementById('error-area').innerHTML = '<div class="error-box">' + escHtml(e.message) + '</div>';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🖼 Generate Infographic';
-  }
-}
-
-function downloadImage() {
-  if (!currentImageData) return;
-  const a = document.createElement('a');
-  a.href = 'data:image/png;base64,' + currentImageData;
-  a.download = 'system-review-infographic.png';
-  a.click();
-}
-
-function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    b.className = 'tab-btn' + (['pre','pub'][i] === name ? ' active' : '');
-  });
-  ['pre','pub'].forEach(n => {
-    document.getElementById('tab-' + n).className = 'tab-content' + (n === name ? ' active' : '');
-  });
 }
 
 function copyText(id) {
