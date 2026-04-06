@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-set_time_limit(90);
+set_time_limit(300);
 
 $raw = file_get_contents('php://input');
 $data = json_decode($raw, true);
