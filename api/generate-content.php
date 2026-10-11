@@ -74,7 +74,7 @@ function extract_main_content(string $html): string {
     return substr($text, 0, 30000);
 }
 
-$model = 'gemini-3-pro-preview';
+$model = 'gemini-3.8-flash';
 $isPdf = ($sourceType === 'pdf');
 $isText = ($sourceType === 'text');
 

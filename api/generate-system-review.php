@@ -38,7 +38,7 @@ function gemini_call(string $apiKey, string $model, string $prompt): array {
     return ['text' => $text];
 }
 
-$fastModel    = 'gemini-3-flash-preview';
+$fastModel    = 'gemini-3.8-flash';
 $detailModel  = 'gemini-3-pro-preview';
 
 // --- Mode 1: generate marketing post from existing review article ---
