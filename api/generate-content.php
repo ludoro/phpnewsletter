@@ -3,6 +3,11 @@ header('Content-Type: application/json');
 set_time_limit(300);
 
 $raw = file_get_contents('php://input');
+if ($raw === '' && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+    http_response_code(413);
+    echo json_encode(['error' => 'Request too large. Use a smaller PDF or raise post_max_size in php.ini (currently ' . ini_get('post_max_size') . ').']);
+    exit;
+}
 $data = json_decode($raw, true);
 
 $sourceType    = $data['sourceType']      ?? '';
@@ -76,6 +81,7 @@ function extract_main_content(string $html): string {
 
 $model = 'gemini-3.8-flash';
 $isPdf = ($sourceType === 'pdf');
+$isPdfUpload = ($sourceType === 'pdf-upload');
 $isText = ($sourceType === 'text');
 
 $titlePrompt = "You are an expert email marketer. Based on the newsletter article below, generate a compelling email subject line (title) and preview text (subtitle) optimized to maximize open rates.\n\nRules:\n- Title: max 60 characters, specific, creates curiosity or urgency, no clickbait, no ALL CAPS\n- Subtitle: max 100 characters, adds context or a second hook that complements the title\n- No markdown formatting\n- Output exactly two lines in this format:\nTITLE: <title here>\nSUBTITLE: <subtitle here>";
@@ -88,12 +94,25 @@ function parse_title_subtitle(string $text): array {
     return ['title' => $title, 'subtitle' => $subtitle];
 }
 
-// --- PDF path ---
-if ($isPdf) {
+// --- PDF path (link or uploaded file) ---
+if ($isPdf || $isPdfUpload) {
+    if ($isPdfUpload) {
+        // Uploaded file arrives as base64; verify it is actually a PDF before sending it on
+        $decoded = base64_decode($sourceInput, true);
+        if ($decoded === false || strncmp($decoded, '%PDF', 4) !== 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Uploaded file is not a valid PDF']);
+            exit;
+        }
+        unset($decoded);
+        $pdfPart = ['inlineData' => ['mimeType' => 'application/pdf', 'data' => $sourceInput]];
+    } else {
+        $pdfPart = ['fileData' => ['fileUri' => $sourceInput, 'mimeType' => 'application/pdf']];
+    }
     $newsletterResult = gemini_call($apiKey, $model, [[
         'parts' => [
             ['text' => $newsletterPrompt],
-            ['fileData' => ['fileUri' => $sourceInput, 'mimeType' => 'application/pdf']],
+            $pdfPart,
         ]
     ]]);
     if (isset($newsletterResult['error'])) {

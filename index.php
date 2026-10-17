@@ -26,17 +26,19 @@
 
   <div class="card">
     <h2>Source Content</h2>
-    <p class="desc">Provide a website URL, PDF link, or paste plain text to generate content</p>
+    <p class="desc">Provide a website URL, PDF link or file, or paste plain text to generate content</p>
 
     <div class="source-toggle">
       <button class="btn btn-primary" id="btn-url" onclick="setSource('url')">🔗 Website URL</button>
       <button class="btn btn-outline" id="btn-pdf" onclick="setSource('pdf')">📄 PDF Link</button>
+      <button class="btn btn-outline" id="btn-pdf-upload" onclick="setSource('pdf-upload')">📎 Upload PDF</button>
       <button class="btn btn-outline" id="btn-text" onclick="setSource('text')">📝 Plain Text</button>
     </div>
 
     <div class="field">
       <label id="source-label">Website URL</label>
       <input type="text" id="source-input" placeholder="https://example.com/article" />
+      <input type="file" id="source-file" accept="application/pdf,.pdf" style="display:none" />
       <div id="source-textarea-wrap" style="display:none">
         <textarea id="source-textarea" rows="10" class="mono" placeholder="Paste or type your content here..."></textarea>
       </div>
@@ -217,6 +219,8 @@ Structure:
 - Call to Action: "Read the full deep dive in the newsletter, link below".`;
 
 let sourceType = 'url';
+// Keep base64 size under PHP's default post_max_size (8M)
+const MAX_PDF_BYTES = 5 * 1024 * 1024;
 
 // Init
 document.getElementById('newsletter-prompt').value = NEWSLETTER_PROMPT;
@@ -232,25 +236,48 @@ document.getElementById('api-key').addEventListener('input', function() {
 
 function setSource(type) {
   sourceType = type;
-  ['url','pdf','text'].forEach(t => {
+  ['url','pdf','pdf-upload','text'].forEach(t => {
     document.getElementById('btn-' + t).className = 'btn ' + (t === type ? 'btn-primary' : 'btn-outline');
   });
   const isText = type === 'text';
-  document.getElementById('source-input').style.display = isText ? 'none' : 'block';
+  const isUpload = type === 'pdf-upload';
+  document.getElementById('source-input').style.display = (isText || isUpload) ? 'none' : 'block';
+  document.getElementById('source-file').style.display = isUpload ? 'block' : 'none';
   document.getElementById('source-textarea-wrap').style.display = isText ? 'block' : 'none';
-  document.getElementById('source-label').textContent = type === 'url' ? 'Website URL' : type === 'pdf' ? 'PDF Link' : 'Plain Text Content';
-  if (!isText) {
+  document.getElementById('source-label').textContent = {url: 'Website URL', pdf: 'PDF Link', 'pdf-upload': 'PDF File', text: 'Plain Text Content'}[type];
+  if (!isText && !isUpload) {
     document.getElementById('source-input').placeholder = type === 'url' ? 'https://example.com/article' : 'https://example.com/document.pdf';
   }
 }
 
-function getSourceInput() {
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('Failed to read PDF file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function getSourceInput() {
   if (sourceType === 'text') return document.getElementById('source-textarea').value.trim();
+  if (sourceType === 'pdf-upload') {
+    const file = document.getElementById('source-file').files[0];
+    if (!file) return '';
+    if (file.size > MAX_PDF_BYTES) throw new Error('PDF is too large (max 5 MB)');
+    return readFileAsBase64(file);
+  }
   return document.getElementById('source-input').value.trim();
 }
 
 async function generate() {
-  const sourceInput = getSourceInput();
+  let sourceInput;
+  try {
+    sourceInput = await getSourceInput();
+  } catch(e) {
+    document.getElementById('error-area').innerHTML = '<div class="error-box">' + escHtml(e.message) + '</div>';
+    return;
+  }
   const apiKey = document.getElementById('api-key').value.trim();
   if (!sourceInput || !apiKey) return;
 
